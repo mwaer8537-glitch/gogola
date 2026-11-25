@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>إنقاذ الطريق PRO — شبكة أوناش القاهرة الكبرى</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --bg-main: #070b14;
+      --bg-elevated: #0e1626;
+      --bg-card: #131e33;
+      --bg-card-hover: #182640;
+      --border: rgba(148, 163, 184, 0.16);
+      --border-strong: rgba(245, 158, 11, 0.45);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --amber: #f59e0b;
+      --amber-glow: rgba(245, 158, 11, 0.18);
+      --danger: #ef4444;
+      --wa: #22c55e;
+      --wa-dark: #16a34a;
+      --blue: #38bdf8;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Cairo', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(245, 158, 11, 0.11), transparent 38%),
+        radial-gradient(circle at 88% 10%, rgba(56, 189, 248, 0.08), transparent 42%),
+        var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 500;
+      backdrop-filter: blur(14px);
+      background: rgba(7, 11, 20, 0.85);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #070b14;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 20px;
+      box-shadow: 0 8px 20px rgba(245, 158, 11, 0.25);
+    }
+
+    .brand-title h1 {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+    }
+
+    .brand-title p {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .stat-pill {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      padding: 7px 13px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .stat-pill strong {
+      color: var(--amber);
+    }
+
+    .wa-pill {
+      background: rgba(34, 197, 94, 0.14);
+      border: 1px solid rgba(34, 197, 94, 0.45);
+      color: #86efac;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .container {
+      max-width: 1340px;
+      margin: 22px auto;
+      padding: 0 18px 40px;
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 1024px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      gap: 10px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step-badge {
+      background: var(--amber-glow);
+      color: var(--amber);
+      border: 1px solid var(--border-strong);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 9px;
+      border-radius: 999px;
+    }
+
+    label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #cbd5e1;
+      margin: 12px 0 6px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background: var(--bg-main);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 10px 12px;
+      font-size: 13.5px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--amber);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-size: 13.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.12s, background 0.2s, opacity 0.2s;
+    }
+
+    .btn:active {
+      transform: scale(0.99);
+    }
+
+    .btn-gps {
+      background: linear-gradient(135deg, #f59e0b, #ea580c);
+      color: #070b14;
+      padding: 13px 16px;
+      font-size: 14px;
+      box-shadow: 0 8px 20px rgba(245, 158, 11, 0.25);
+    }
+
+    .btn-gps:hover {
+      filter: brightness(1.06);
+    }
+
+    .btn-ghost {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      margin-top: 8px;
+    }
+
+    .btn-ghost:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(148, 163, 184, 0.35);
+    }
+
+    .btn-wa {
+      background: linear-gradient(135deg, var(--wa), var(--wa-dark));
+      color: #052e16;
+      font-size: 14.5px;
+      padding: 13px 16px;
+      margin-top: 12px;
+      box-shadow: 0 8px 22px rgba(34, 197, 94, 0.25);
+    }
+
+    .btn-wa:hover {
+      filter: brightness(1.06);
+    }
+
+    .btn-map {
+      background: rgba(56, 189, 248, 0.12);
+      color: #7dd3fc;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      margin-top: 8px;
+    }
+
+    .btn-map:hover {
+      background: rgba(56, 189, 248, 0.2);
+    }
+
+    .gps-panel {
+      margin-top: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 13px;
+      font-size: 12.5px;
+      line-height: 1.65;
+      color: #cbd5e1;
+    }
+
+    .selected-box {
+      margin-top: 16px;
+      background: linear-gradient(160deg, rgba(34, 197, 94, 0.1), rgba(19, 30, 51, 0.95));
+      border: 1px solid rgba(34, 197, 94, 0.42);
+      border-radius: 15px;
+      padding: 15px;
+    }
+
+    .selected-tag {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #4ade80;
+      margin-bottom: 4px;
+    }
+
+    .selected-name {
+      font-size: 17px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .selected-meta {
+      font-size: 12.5px;
+      color: #cbd5e1;
+      margin-top: 6px;
+      line-height: 1.6;
+    }
+
+    .map-shell {
+      position: relative;
+      height: 440px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #090f1d;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    #fallback-canvas {
+      display: none;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+    }
+
+    .map-bar {
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .coords-badge {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 8px;
+      color: var(--amber);
+      font-weight: 700;
+    }
+
+    .filters-row {
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 10px;
+      margin-top: 14px;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 640px) {
+      .filters-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .winches-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
+      gap: 12px;
+      max-height: 540px;
+      overflow-y: auto;
+      padding-left: 4px;
+    }
+
+    .winch-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 13px 14px;
+      cursor: pointer;
+      transition: transform 0.14s, border-color 0.2s, background 0.2s;
+    }
+
+    .winch-item:hover {
+      background: var(--bg-card-hover);
+      transform: translateY(-2px);
+      border-color: rgba(245, 158, 11, 0.35);
+    }
+
+    .winch-item.active {
+      border-color: var(--amber);
+      background: rgba(245, 158, 11, 0.08);
+      box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.35);
+    }
+
+    .winch-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .winch-name {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .dist-chip {
+      background: rgba(56, 189, 248, 0.14);
+      color: #7dd3fc;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .winch-area {
+      font-size: 12px;
+      color: var(--amber);
+      font-weight: 700;
+      margin-top: 5px;
+    }
+
+    .winch-addr {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-logo">🚨</div>
+      <div class="brand-title">
+        <h1>إنقاذ الطريق — القاهرة الكبرى</h1>
+        <p>تحديد موقع العطل بدقة + توجيه أقرب ونش عبر واتساب الإدارة</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="stat-pill">الأوناش المسجلة: <strong id="total-count">0</strong></div>
+      <a class="wa-pill" href="https://wa.me/201271361974" target="_blank" rel="noopener">
+        💬 واتساب الإدارة: <span dir="ltr">+20 127 136 1974</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- العمود الأيمن: تحديد موقع السيارة وطلب الونش -->
+    <section class="card">
+      <div class="section-head">
+        <h2>موقع السيارة وطلب الونش</h2>
+        <span class="step-badge">خطوة 1</span>
+      </div>
+
+      <button type="button" class="btn btn-gps" id="gps-btn" onclick="detectCarGPS()">
+        📍 تحديد موقع السيارة الآن (GPS عالي الدقة)
+      </button>
+
+      <div class="gps-panel" id="gps-status">
+        حالة الموقع: اضغط على زر <strong>GPS</strong> لتحديد موقع سيارتك، أو <strong>اسحب الدبوس الأحمر</strong> على الخريطة إلى مكان العطل بدقة.
+      </div>
+
+      <label>إحداثيات السيارة (خط العرض Lat / خط الطول Lng):</label>
+      <div class="grid-2">
+        <input type="number" step="any" id="lat-input" placeholder="مثال: 30.0444" />
+        <input type="number" step="any" id="lng-input" placeholder="مثال: 31.2357" />
+      </div>
+      <button type="button" class="btn btn-ghost" onclick="applyManualCoordinates()">
+        🎯 تثبيت الإحداثيات على الخريطة
+      </button>
+
+      <label for="car-notes">نوع السيارة ووصف العطل / علامة مميزة على الطريق:</label>
+      <textarea id="car-notes" rows="2" placeholder="مثال: تويوتا كورولا متعطلة على الدائري اتجاه المعادي..."></textarea>
+
+      <div id="selected-winch-box"></div>
+    </section>
+
+    <!-- العمود الأيسر: الخريطة وقائمة الأوناش -->
+    <section class="card">
+      <div class="section-head">
+        <h2>خريطة العطل والأقرب إليك</h2>
+        <span class="step-badge">خطوة 2</span>
+      </div>
+
+      <div class="map-shell">
+        <div id="map"></div>
+        <canvas id="fallback-canvas"></canvas>
+      </div>
+
+      <div class="map-bar">
+        <span>💡 يمكنك النقر على الخريطة أو سحب علامة السيارة الحمراء لتصحيح المكان بدقة.</span>
+        <span class="coords-badge" id="coords-pill" dir="ltr">30.044400, 31.235700</span>
+      </div>
+
+      <div class="filters-row">
+        <input type="search" id="search-input" placeholder="ابحث باسم الونش أو الشارع أو المنطقة..." oninput="renderWinches()" />
+        <select id="district-filter" onchange="renderWinches()">
+          <option value="">كل مناطق القاهرة الكبرى</option>
+        </select>
+      </div>
+
+      <div class="winches-grid" id="winches-grid"></div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const WHATSAPP_NUMBER = "201271361974";
+
+    // قائمة الأوناش المستخرجة من لقطات الشاشة (yp.eg) للقاهرة الكبرى
+    const WINCHES = [
+      { id: "W-01", name: "ونش موبيل القاهرة الجديدة والرحاب", district: "التجمع الخامس / القاهرة الجديدة", address: "موبيل الرحاب، التجمع الخامس، القاهرة الجديدة، القاهرة.", lat: 30.0265, lng: 31.4840 },
+      { id: "W-02", name: "يوسف للانقاذ السريع", district: "السادس من أكتوبر", address: "الدور 3، المحور المركزى، الحى السابع، السادس من اكتوبر، الجيزة.", lat: 29.9685, lng: 30.9340 },
+      { id: "W-03", name: "ونش شل", district: "مصر الجديدة", address: "الماظة، مصر الجديدة، القاهرة.", lat: 30.0895, lng: 31.3460 },
+      { id: "W-04", name: "ونش كارز", district: "مدينة نصر", address: "40 امتداد ش مصطفى النحاس، الحى العاشر، مدينة نصر، القاهرة.", lat: 30.0468, lng: 31.3845 },
+      { id: "W-05", name: "ونش للخدمات اللوجيستية", district: "المعادي", address: "برج ريحانة ريزيدنس - معمار المرشدى ش زهراء المعادى، الشقة 8، الدور 3، زهراء المعادى، المعادى، القاهرة.", lat: 29.9715, lng: 31.2980 },
+      { id: "W-06", name: "ونش مصر", district: "القاهرة الجديدة", address: "الطريق الدائرى، القاهرة الجديدة، القاهرة.", lat: 30.0145, lng: 31.4220 },
+      { id: "W-07", name: "ونش انقاذ شركة ويى سيرف", district: "مدينة نصر", address: "25 ش محمد رضوان، الحى العاشر، مدينة نصر، القاهرة.", lat: 30.0442, lng: 31.3810 },
+      { id: "W-08", name: "ونش انقاذ محمد بحر", district: "مدينة نصر", address: "42 ش مكرم عبيد، مدينة نصر، القاهرة.", lat: 30.0585, lng: 31.3475 },
+      { id: "W-09", name: "ونش انقاذ مدينة نصر", district: "مدينة نصر", address: "12 ش جمال الدين الشيال، مدينة نصر، القاهرة.", lat: 30.0620, lng: 31.3340 },
+      { id: "W-10", name: "ونش تبارك للانقاذ", district: "الجيزة / المنيب", address: "ش البحر الاعظم، المنيب، الجيزة.", lat: 29.9910, lng: 31.2115 },
+      { id: "W-11", name: "ونش انقاذ الشافعى", district: "مدينة نصر", address: "ش الميثاق، مدينة نصر، القاهرة.", lat: 30.0315, lng: 31.3560 },
+      { id: "W-12", name: "ونش انقاذ المدينة المنورة", district: "طريق مصر إسكندرية الصحراوي", address: "كم 59 طريق مصر اسكندرية الصحراوى، قرية الاسد، طريق القاهرة الاسكندرية الصحراوى، الجيزة.", lat: 30.2820, lng: 30.7850 },
+      { id: "W-13", name: "ونش انقاذ سيارات الفهد", district: "مدينة نصر", address: "14 ش مهدى عرفة، مدينة الواحة، الحى العاشر، مدينة نصر، القاهرة.", lat: 30.0375, lng: 31.3965 },
+      { id: "W-14", name: "ونش انقاذ سيارات الهيبة", district: "السادس من أكتوبر", address: "مشروع ابنى بيتك - المرحلة الاولى - عمارة 2، السادس من اكتوبر، الجيزة.", lat: 29.9145, lng: 30.8840 },
+      { id: "W-15", name: "ونش انقاذ 6 اكتوبر", district: "الشيخ زايد / 6 أكتوبر", address: "عمارة 27 الحى السادس، الشيخ زايد، السادس من اكتوبر، الجيزة.", lat: 30.0330, lng: 30.9775 },
+      { id: "W-16", name: "ونش انقاذ الدعاء", district: "مدينة نصر", address: "108 ش محمد مهدى عرفة، الحى العاشر، مدينة نصر، القاهرة.", lat: 30.0405, lng: 31.3910 },
+      { id: "W-17", name: "ونش انقاذ السلام", district: "الشيخ زايد / 6 أكتوبر", address: "الشيخ زايد، السادس من اكتوبر، الجيزة.", lat: 30.0245, lng: 30.9640 },
+      { id: "W-18", name: "ونش انقاذ السيارات - الفرجانى", district: "السادس من أكتوبر", address: "84، الشقة 104، مشروعات وزارة الداخلية، الفردوس، السادس من اكتوبر، الجيزة.", lat: 29.9360, lng: 30.8960 },
+      { id: "W-19", name: "وادى النيل لانقاذ السيارات", district: "الوراق / الجيزة", address: "4 ش ترعة السواحل - وراق الحضر، الوراق، الجيزة.", lat: 30.0915, lng: 31.2175 },
+      { id: "W-20", name: "ونش ارزاق", district: "الجيزة", address: "1 ش د. محمد صبحى، الجيزة، الجيزة.", lat: 30.0110, lng: 31.2075 },
+      { id: "W-21", name: "ونش المصطفى", district: "المعصرة / القاهرة", address: "37 ش النقطة، المعصرة، القاهرة.", lat: 29.9040, lng: 31.3015 },
+      { id: "W-22", name: "ونش الهرم", district: "فيصل / الجيزة", address: "ش عمرو بن العاص، امتداد ش المطبعة، فيصل، الجيزة.", lat: 29.9975, lng: 31.1745 },
+      { id: "W-23", name: "ماستر لانقاذ السيارات", district: "مصر الجديدة / شيراتون", address: "112 عمارات صقر قريش -، مساكن شيراتون، مصر الجديدة، القاهرة.", lat: 30.1045, lng: 31.3745 },
+      { id: "W-24", name: "محمد دايو", district: "مدينة نصر", address: "41 عمارات صقر قريش - ، الحى العاشر، مدينة نصر، القاهرة.", lat: 30.0435, lng: 31.3875 },
+      { id: "W-25", name: "مركز ميشو", district: "مصر الجديدة", address: "78 ش ابو بكر الصديق، ميدان سفير، مصر الجديدة، القاهرة.", lat: 30.0955, lng: 31.3235 },
+      { id: "W-26", name: "هاى سيرفيس للنقل والانقاذ", district: "فيصل / الجيزة", address: "4 ش مصطفى المصرى، الوفاء و الامل، فيصل، الجيزة.", lat: 29.9945, lng: 31.1575 },
+      { id: "W-27", name: "على مقاركو", district: "شبرا / القاهرة", address: "4 ش الكلداني، شبرا، القاهرة.", lat: 30.0715, lng: 31.2445 },
+      { id: "W-28", name: "فاستر للانقاذ السريع", district: "مدينة السلام / القاهرة", address: "ش اسكندرية، مدينة السلام، القاهرة.", lat: 30.1645, lng: 31.4040 },
+      { id: "W-29", name: "كرين رود", district: "وسط البلد / القاهرة", address: "1 ب عمارة ماردين - ش 26 يوليو - الدور 5 شقة 511، وسط البلد، القاهرة.", lat: 30.0515, lng: 31.2375 },
+      { id: "W-30", name: "مؤسسة سيمكو", district: "إمبابة / الجيزة", address: "6 ش ابراهيم رمضان - مدينة الامل، امبابة، الجيزة.", lat: 30.0775, lng: 31.2045 },
+      { id: "W-31", name: "سما لانقاذ السيارات", district: "المعادي", address: "146 أ ش النصر ميدان الجزائر - الدور 6، المعادى الجديدة، المعادى، القاهرة.", lat: 29.9675, lng: 31.2675 },
+      { id: "W-32", name: "سمرة للانقاذ السريع", district: "شبرا / القاهرة", address: "11 ش راتب متفرع من ش شبرا، شبرا، القاهرة.", lat: 30.0815, lng: 31.2455 },
+      { id: "W-33", name: "سيدكو لانقاذ السيارات", district: "مصر القديمة / القاهرة", address: "50 ش الفسطاط، مصر القديمة، القاهرة.", lat: 30.0075, lng: 31.2345 },
+      { id: "W-34", name: "صلاح بطة لانقاذ السيارات", district: "الظاهر / القاهرة", address: "41 ش حمدى متفرع من ميدان فخرى، الظاهر، القاهرة.", lat: 30.0635, lng: 31.2575 },
+      { id: "W-35", name: "جهاد لانقاذ السيارات", district: "المعادي", address: "201 عمارات صقر قريش، طريق الاوتوستراد، المعادى الجديدة، المعادى، القاهرة.", lat: 29.9735, lng: 31.2775 },
+      { id: "W-36", name: "خدمة موبايل بى ام دبليو", district: "القطامية / القاهرة", address: "خدمة طوارئ، القطامية، القاهرة.", lat: 29.9645, lng: 31.4345 },
+      { id: "W-37", name: "زياد لانقاذ السيارات", district: "مدينة نصر", address: "56 عمارات اطلس - ش الطاقة - مدينة القضاة، الحى الثامن، مدينة نصر، القاهرة.", lat: 30.0535, lng: 31.3615 },
+      { id: "W-38", name: "سبيد سيرفيس لخدمات النقل", district: "الحرفيين / طريق الإسماعيلية", address: "كم 19 - طريق مصر اسماعيلية الصحراوى، الحرفيين، القاهرة.", lat: 30.1545, lng: 31.4845 }
+    ];
+
+    let carLocation = {
+      lat: 30.0444,
+      lng: 31.2357,
+      accuracy: null,
+      method: "نقطة افتراضية (يرجى تحديد موقع السيارة بدقة)"
+    };
+
+    let selectedWinchId = null;
+    let map = null;
+    let carMarker = null;
+    let accuracyCircle = null;
+    let winchMarkers = [];
+    let routeLine = null;
+    let useCanvasFallback = false;
+
+    function haversineKm(lat1, lon1, lat2, lon2) {
+      const toRad = d => (d * Math.PI) / 180;
+      const R = 6371;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function populateDistricts() {
+      document.getElementById("total-count").textContent = WINCHES.length;
+      const select = document.getElementById("district-filter");
+      const districts = [...new Set(WINCHES.map(w => w.district))];
+      select.innerHTML = `<option value="">كل مناطق القاهرة الكبرى (${WINCHES.length})</option>` +
+        districts.map(d => `<option value="${d}">${d}</option>`).join("");
+    }
+
+    function initMap() {
+      try {
+        if (typeof L === "undefined") throw new Error("Leaflet unavailable");
+        map = L.map("map", { zoomControl: true }).setView([carLocation.lat, carLocation.lng], 11);
+
+        const tileLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+          attribution: "&copy; OpenStreetMap &copy; CARTO",
+          maxZoom: 19
+        });
+
+        tileLayer.on("tileerror", () => switchToCanvasFallback());
+        tileLayer.addTo(map);
+
+        map.on("click", (e) => {
+          updateCarLocation(e.latlng.lat, e.latlng.lng, null, "تحديد مباشر بالنقر على الخريطة");
+        });
+      } catch (err) {
+        switchToCanvasFallback();
+      }
+    }
+
+    function switchToCanvasFallback() {
+      if (useCanvasFallback) return;
+      useCanvasFallback = true;
+      document.getElementById("map").style.display = "none";
+      const canvas = document.getElementById("fallback-canvas");
+      canvas.style.display = "block";
+      canvas.addEventListener("click", (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const xRatio = (e.clientX - rect.left) / rect.width;
+        const yRatio = (e.clientY - rect.top) / rect.height;
+        const lng = 30.75 + xRatio * (31.55 - 30.75);
+        const lat = 30.30 - yRatio * (30.30 - 29.88);
+        updateCarLocation(lat, lng, null, "تحديد مباشر على الخريطة");
+      });
+      drawCanvasMap();
+    }
+
+    function drawCanvasMap() {
+      const canvas = document.getElementById("fallback-canvas");
+      if (!canvas || !useCanvasFallback) return;
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.fillStyle = "#090f1d";
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.strokeStyle = "#162238";
+      ctx.lineWidth = 1;
+      for (let x = 0; x < w; x += 44) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+      }
+      for (let y = 0; y < h; y += 44) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+
+      const toXY = (lat, lng) => ({
+        x: ((lng - 30.75) / (31.55 - 30.75)) * w,
+        y: ((30.30 - lat) / (30.30 - 29.88)) * h
+      });
+
+      const carXY = toXY(carLocation.lat, carLocation.lng);
+      const list = getFilteredWinches();
+      const target = list.find(item => item.id === selectedWinchId) || list[0];
+
+      if (target) {
+        const tXY = toXY(target.lat, target.lng);
+        ctx.strokeStyle = "#f59e0b";
+        ctx.setLineDash([6, 6]);
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(carXY.x, carXY.y);
+        ctx.lineTo(tXY.x, tXY.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      WINCHES.forEach(item => {
+        const pt = toXY(item.lat, item.lng);
+        ctx.fillStyle = "#22c55e";
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      ctx.fillStyle = "#ef4444";
+      ctx.beginPath();
+      ctx.arc(carXY.x, carXY.y, 9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 12px Cairo, sans-serif";
+      ctx.fillText("موقع السيارة", carXY.x + 12, carXY.y + 4);
+    }
+
+    function updateCarLocation(lat, lng, accuracy, method) {
+      const nLat = Number(lat);
+      const nLng = Number(lng);
+      if (Number.isNaN(nLat) || Number.isNaN(nLng) || nLat < -90 || nLat > 90 || nLng < -180 || nLng > 180) {
+        alert("من فضلك أدخل إحداثيات صحيحة.");
+        return;
+      }
+
+      carLocation = {
+        lat: Number(nLat.toFixed(6)),
+        lng: Number(nLng.toFixed(6)),
+        accuracy: accuracy !== null && !Number.isNaN(accuracy) ? Math.round(accuracy) : null,
+        method
+      };
+
+      document.getElementById("lat-input").value = carLocation.lat;
+      document.getElementById("lng-input").value = carLocation.lng;
+      document.getElementById("coords-pill").textContent = `${carLocation.lat.toFixed(6)}, ${carLocation.lng.toFixed(6)}`;
+
+      const accLabel = carLocation.accuracy !== null ? ` — دقة ±${carLocation.accuracy} متر` : "";
+      const warning = carLocation.accuracy && carLocation.accuracy > 1200
+        ? `<br/><span style="color:#fbbf24;">⚠️ الدقة الحالية من الشبكة واسعة؛ يُنصح بسحب الدبوس الأحمر إلى مكان السيارة بدقة على الخريطة.</span>`
+        : "";
+
+      document.getElementById("gps-status").innerHTML =
+        `✅ <strong>${carLocation.method}</strong>${accLabel}${warning}`;
+
+      selectedWinchId = null;
+      if (map && !useCanvasFallback) {
+        map.panTo([carLocation.lat, carLocation.lng]);
+      }
+      renderWinches();
+    }
+
+    function detectCarGPS() {
+      if (!navigator.geolocation) {
+        document.getElementById("gps-status").innerHTML =
+          "⚠️ المتصفح لا يدعم GPS. حدد موقع السيارة بالنقر على الخريطة أو بإدخال الإحداثيات.";
+        return;
+      }
+
+      const btn = document.getElementById("gps-btn");
+      btn.disabled = true;
+      btn.textContent = "⏳ جاري تحديد موقع السيارة بدقة...";
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          btn.disabled = false;
+          btn.textContent = "📍 تحديد موقع السيارة الآن (GPS عالي الدقة)";
+          updateCarLocation(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, "تحديد تلقائي عبر GPS");
+          if (map && !useCanvasFallback) {
+            map.setView([pos.coords.latitude, pos.coords.longitude], 14);
+          }
+        },
+        (err) => {
+          btn.disabled = false;
+          btn.textContent = "📍 تحديد موقع السيارة الآن (GPS عالي الدقة)";
+          const msg = err.code === 1
+            ? "تم رفض صلاحية الوصول للموقع من المتصفح."
+            : "تعذر التقاط إشارة GPS حاليًا.";
+          document.getElementById("gps-status").innerHTML =
+            `⚠️ ${msg} يمكنك النقر على موقع سيارتك في الخريطة أو إدخال الإحداثيات يدويًا.`;
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0
+        }
+      );
+    }
+
+    function applyManualCoordinates() {
+      const lat = parseFloat(document.getElementById("lat-input").value);
+      const lng = parseFloat(document.getElementById("lng-input").value);
+      updateCarLocation(lat, lng, null, "تثبيت يدوي للإحداثيات");
+      if (map && !useCanvasFallback && !Number.isNaN(lat) && !Number.isNaN(lng)) {
+        map.setView([lat, lng], 14);
+      }
+    }
+
+    function getFilteredWinches() {
+      const q = document.getElementById("search-input").value.trim().toLowerCase();
+      const district = document.getElementById("district-filter").value;
+
+      return WINCHES
+        .filter(w => {
+          const matchesDistrict = !district || w.district === district;
+          const matchesSearch = !q ||
+            w.name.toLowerCase().includes(q) ||
+            w.address.toLowerCase().includes(q) ||
+            w.district.toLowerCase().includes(q);
+          return matchesDistrict && matchesSearch;
+        })
+        .map(w => {
+          const dist = haversineKm(carLocation.lat, carLocation.lng, w.lat, w.lng);
+          const estMinutes = Math.max(8, Math.round((dist / 35) * 60));
+          return {
+            ...w,
+            distanceKm: Number(dist.toFixed(2)),
+            estMinutes
+          };
+        })
+        .sort((a, b) => a.distanceKm - b.distanceKm);
+    }
+
+    function buildWhatsAppLink(winch) {
+      const notes = document.getElementById("car-notes").value.trim() || "غير محدد";
+      const carGmaps = `https://www.google.com/maps?q=${carLocation.lat},${carLocation.lng}`;
+      const winchGmaps = `https://www.google.com/maps?q=${winch.lat},${winch.lng}`;
+      const routeGmaps = `https://www.google.com/maps/dir/?api=1&origin=${winch.lat},${winch.lng}&destination=${carLocation.lat},${carLocation.lng}`;
+      const accText = carLocation.accuracy !== null ? ` (±${carLocation.accuracy}م)` : "";
+
+      const text = [
+        "طلب ونش إنقاذ سيارة — إنقاذ الطريق 🚨",
+        `• إحداثيات السيارة: ${carLocation.lat}, ${carLocation.lng}${accText}`,
+        `• موقع السيارة على خرائط جوجل: ${carGmaps}`,
+        `• الونش المختار: ${winch.name} (${winch.id})`,
+        `• عنوان الونش: ${winch.address}`,
+        `• موقع الونش على الخريطة: ${winchGmaps}`,
+        `• المسافة التقريبية: ${winch.distanceKm} كم (~${winch.estMinutes} دقيقة)`,
+        `• مسار التوجيه: ${routeGmaps}`,
+        `• تفاصيل السيارة والعطل: ${notes}`
+      ].join("\n");
+
+      return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+    }
+
+    function selectWinch(id) {
+      selectedWinchId = id;
+      renderWinches();
+    }
+
+    function renderWinches() {
+      const filtered = getFilteredWinches();
+      const active = filtered.find(w => w.id === selectedWinchId) || filtered[0] || null;
+      const carGmaps = `https://www.google.com/maps?q=${carLocation.lat},${carLocation.lng}`;
+
+      const selectedBox = document.getElementById("selected-winch-box");
+      if (active) {
+        selectedBox.innerHTML = `
+          <div class="selected-box">
+            <div class="selected-tag">✅ أقرب / أنسب ونش مرشح للسيارة</div>
+            <div class="selected-name">${active.name}</div>
+            <div class="selected-meta">
+              <div><strong>المنطقة:</strong> ${active.district}</div>
+              <div><strong>العنوان:</strong> ${active.address}</div>
+              <div><strong>المسافة التقريبية:</strong> <span style="color:#fbbf24; font-weight:800;">${active.distanceKm} كم</span> (حوالي ${active.estMinutes} دقيقة)</div>
+            </div>
+            <a href="${buildWhatsAppLink(active)}" target="_blank" rel="noopener" style="text-decoration:none;">
+              <button type="button" class="btn btn-wa">💬 إرسال طلب الونش عبر واتساب الإدارة</button>
+            </a>
+            <a href="${carGmaps}" target="_blank" rel="noopener" style="text-decoration:none;">
+              <button type="button" class="btn btn-map">🗺️ فتح موقع السيارة في Google Maps</button>
+            </a>
+          </div>
+        `;
+      } else {
+        selectedBox.innerHTML = `
+          <div class="gps-panel" style="margin-top:14px;">
+            لا توجد نتائج مطابقة للبحث الحالي. يمكنك إرسال موقع السيارة مباشرة لواتساب الإدارة:
+            <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("أحتاج ونش إنقاذ لموقع السيارة: " + carGmaps)}" target="_blank" rel="noopener" style="color:#4ade80; font-weight:700;">فتح واتساب</a>
+          </div>
+        `;
+      }
+
+      const grid = document.getElementById("winches-grid");
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="gps-panel">لا توجد أوناش مطابقة لهذا الفلتر.</div>`;
+      } else {
+        grid.innerHTML = filtered.map(w => `
+          <article class="winch-item ${active && active.id === w.id ? "active" : ""}" onclick="selectWinch('${w.id}')">
+            <div class="winch-top">
+              <div class="winch-name">${w.name}</div>
+              <span class="dist-chip">${w.distanceKm} كم</span>
+            </div>
+            <div class="winch-area">${w.district} • ~${w.estMinutes} د</div>
+            <div class="winch-addr">${w.address}</div>
+          </article>
+        `).join("");
+      }
+
+      if (map && !useCanvasFallback) {
+        if (carMarker) map.removeLayer(carMarker);
+        if (accuracyCircle) map.removeLayer(accuracyCircle);
+        if (routeLine) map.removeLayer(routeLine);
+        winchMarkers.forEach(m => map.removeLayer(m));
+        winchMarkers = [];
+
+        carMarker = L.marker([carLocation.lat, carLocation.lng], { draggable: true }).addTo(map);
+        carMarker.bindPopup(`<b>موقع السيارة المتعطلة</b><br>${carLocation.method}`).openPopup();
+        carMarker.on("dragend", (ev) => {
+          const p = ev.target.getLatLng();
+          updateCarLocation(p.lat, p.lng, null, "تعديل موقع السيارة بسحب الدبوس");
+        });
+
+        if (carLocation.accuracy && carLocation.accuracy < 25000) {
+          accuracyCircle = L.circle([carLocation.lat, carLocation.lng], {
+            radius: carLocation.accuracy,
+            color: "#38bdf8",
+            fillColor: "#38bdf8",
+            fillOpacity: 0.12,
+            weight: 1.5
+          }).addTo(map);
+        }
+
+        filtered.forEach(w => {
+          const isSelected = active && active.id === w.id;
+          const marker = L.circleMarker([w.lat, w.lng], {
+            radius: isSelected ? 9 : 6.5,
+            fillColor: isSelected ? "#f59e0b" : "#22c55e",
+            color: "#070b14",
+            weight: 2,
+            fillOpacity: 0.95
+          }).addTo(map).bindPopup(
+            `<b>${w.name}</b><br>${w.address}<br>المسافة: <b>${w.distanceKm} كم</b>`
+          );
+          marker.on("click", () => selectWinch(w.id));
+          winchMarkers.push(marker);
+        });
+
+        if (active) {
+          routeLine = L.polyline(
+            [[carLocation.lat, carLocation.lng], [active.lat, active.lng]],
+            { color: "#f59e0b", weight: 3, dashArray: "7, 7" }
+          ).addTo(map);
+        }
+      } else {
+        drawCanvasMap();
+      }
+    }
+
+    window.addEventListener("load", () => {
+      document.getElementById("lat-input").value = carLocation.lat;
+      document.getElementById("lng-input").value = carLocation.lng;
+      populateDistricts();
+      initMap();
+      renderWinches();
+    });
+  </script>
+</body>
+</html>
